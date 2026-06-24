@@ -1,36 +1,132 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}My Reservations — Maison Rouge{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="mb-4 text-center">My Reservations</h2>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered align-middle">
-            <thead class="table-dark text-center">
-                <tr>
-                    <th scope="col">Table</th>
-                    <th scope="col">Date</th>
-                    <th scope="col">Time</th>
-                </tr>
-            </thead>
-            <tbody class="text-center">
-                {% for r in reservations %}
-                <tr>
-                    <td>{{ r.table.number }}</td>
-                    <td>{{ r.reservation_date|date:"D, M d, Y" }}</td>
-                    <td>{{ r.reservation_time|time:"H:i" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3" class="text-muted">You have no reservations yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="text-center mt-3">
-        <a href="{% url 'home' %}" class="btn btn-outline-primary btn-lg">Go Back</a>
-    </div>
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-header-tag">🗓 My Account</div>
+    <h1>Your <em>Reservations</em></h1>
+    <p>Track all your bookings and manage upcoming dinners at Maison Rouge.</p>
+  </div>
 </div>
-{% endblock content %}
+
+<section class="section" style="padding:56px 0 80px;">
+  <div class="section-inner">
+
+    {% if reservations %}
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  margin-bottom:32px;flex-wrap:wrap;gap:16px;">
+        <p style="color:var(--text-muted);font-size:.85rem;">
+          Showing <strong style="color:var(--text);">{{ reservations|length }}</strong>
+          reservation{{ reservations|length|pluralize }}
+        </p>
+        <a href="{% url 'reserve-table' %}" class="btn btn-gold">+ New Reservation</a>
+      </div>
+
+      <div class="res-grid">
+        {% for res in reservations %}
+          <div class="res-card" data-res-date="{{ res.reservation_date|date:'Y-m-d' }}">
+
+            <div class="res-card-head">
+              <div class="res-table-label">
+                <span>Reservation</span>
+                <div class="res-table-num">
+                  Table #{{ res.table.number }}
+                  {% if res.name %}
+                    <span style="font-size:.75rem;font-weight:400;
+                                 color:var(--text-muted);font-family:'DM Sans',sans-serif;">
+                      · {{ res.name }}
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="badge {% if res.status == 'confirmed' %}badge-confirmed{% else %}badge-cancelled{% endif %}">
+                {% if res.status == 'confirmed' %}✓{% else %}✕{% endif %}
+                {{ res.status|capfirst }}
+              </div>
+            </div>
+
+            <div class="res-card-body">
+              <div class="res-detail">
+                <div class="res-detail-icon">📅</div>
+                <div class="res-detail-info">
+                  <span>Date</span>
+                  <strong>{{ res.reservation_date|date:"D, M d, Y" }}</strong>
+                </div>
+                <div class="countdown-badge"
+                     style="margin-left:auto;font-size:.7rem;color:var(--gold);font-weight:600;"></div>
+              </div>
+
+              <div class="res-detail">
+                <div class="res-detail-icon">🕐</div>
+                <div class="res-detail-info">
+                  <span>Dining Slot</span>
+                  <strong>{{ res.get_slot_label }}</strong>
+                </div>
+              </div>
+
+              <div class="res-detail">
+                <div class="res-detail-icon">👥</div>
+                <div class="res-detail-info">
+                  <span>Party size</span>
+                  <strong>{{ res.guests }} guest{{ res.guests|pluralize }}</strong>
+                </div>
+              </div>
+
+              <div class="res-detail">
+                <div class="res-detail-icon">🪑</div>
+                <div class="res-detail-info">
+                  <span>Table capacity</span>
+                  <strong>{{ res.table.seats }} seats</strong>
+                </div>
+              </div>
+
+              {% if res.special_requests %}
+                <div class="res-detail" style="align-items:flex-start;">
+                  <div class="res-detail-icon" style="margin-top:2px;">📝</div>
+                  <div class="res-detail-info">
+                    <span>Special requests</span>
+                    <strong style="font-weight:400;color:var(--text-soft);font-size:.82rem;">
+                      {{ res.special_requests }}
+                    </strong>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+
+            {% if res.status == 'confirmed' %}
+              <div class="res-card-actions">
+                <form method="post" action="{% url 'cancel-own-reservation' res.pk %}"
+                      onsubmit="return confirm('Cancel this reservation? This cannot be undone.');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm"
+                          style="width:100%;justify-content:center;">
+                    ✕ Cancel Reservation
+                  </button>
+                </form>
+              </div>
+            {% elif res.status == 'cancelled' %}
+              <div class="res-card-actions"
+                   style="background:rgba(248,113,113,.04);border-top:1px solid rgba(248,113,113,.1);">
+                <p style="font-size:.78rem;color:#f87171;text-align:center;">✕ This reservation was cancelled</p>
+              </div>
+            {% endif %}
+
+          </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🗓</div>
+        <h3>No Reservations Yet</h3>
+        <p>You haven't made any reservations. Secure your table at Maison Rouge and begin your culinary journey.</p>
+        <a href="{% url 'reserve-table' %}" class="btn btn-gold">Reserve a Table</a>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

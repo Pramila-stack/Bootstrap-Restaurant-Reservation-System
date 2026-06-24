@@ -1,22 +1,320 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Maison Rouge — Fine Dining Experience{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-4 text-center">Our Menu</h2>
-    <div class="row row-cols-1 row-cols-md-3 g-4">
-        {% for item in menu_items %}
-        <div class="col">
-            <div class="card h-100 shadow-sm border-0">
-                <img src="{{ item.image.url }}" class="card-img-top" alt="{{ item.name }}"
-                     style="object-fit: cover; height: 250px;">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ item.name }}</h5>
-                    <p class="text-muted mb-2">Rs. {{ item.price }}</p>
-                    <p class="card-text flex-grow-1">{{ item.description }}</p>
-                </div>
-            </div>
+
+<!-- ═══════════════════════════════════════
+     HERO
+═══════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-particles" id="heroParticles"></div>
+
+  <div class="hero-inner">
+    <!-- Text -->
+    <div class="hero-text">
+      <div class="hero-eyebrow">
+        <span class="hero-eyebrow-dot"></span>
+        Now Accepting Reservations
+      </div>
+      <h1>Where Cuisine<br>Becomes <em class="shimmer">Art</em></h1>
+      <p class="hero-desc">
+        An intimate culinary journey through the finest seasonal ingredients,
+        handcrafted cocktails, and an ambience that lingers long after the last bite.
+      </p>
+      <div class="hero-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'reserve-table' %}" class="btn btn-gold btn-lg">🗓 Reserve Your Table</a>
+          <a href="#menu" class="btn btn-ghost btn-lg">Explore Menu ↓</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="btn btn-gold btn-lg">🗓 Book a Table</a>
+          <a href="#menu" class="btn btn-ghost btn-lg">Explore Menu ↓</a>
+        {% endif %}
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="8" data-suffix="+">8+</div>
+          <div class="hero-stat-label">Years of Excellence</div>
         </div>
-        {% endfor %}
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="50" data-suffix="+">50+</div>
+          <div class="hero-stat-label">Curated Dishes</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num" data-count="12000" data-suffix="+">12k+</div>
+          <div class="hero-stat-label">Happy Guests</div>
+        </div>
+      </div>
     </div>
+
+    <!-- Visual -->
+    <div class="hero-visual">
+      <div class="plate-ring">
+        <div class="plate-center">🍽</div>
+        <span class="plate-orbiting" style="top:5%;left:50%;--dur:3.2s;--delay:.2s;">🍷</span>
+        <span class="plate-orbiting" style="bottom:8%;right:10%;--dur:4s;--delay:.8s;">🌿</span>
+        <span class="plate-orbiting" style="top:30%;right:-5%;--dur:3.6s;--delay:.4s;">🍋</span>
+        <span class="plate-orbiting" style="bottom:25%;left:-5%;--dur:3.8s;--delay:1s;">✦</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll indicator -->
+  <div class="scroll-indicator">
+    <div class="scroll-dot"></div>
+    <span class="scroll-label">Scroll</span>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════
+     FEATURES STRIP
+═══════════════════════════════════════ -->
+<div class="features-strip">
+  <div class="section-inner">
+    <div class="features-grid">
+      <div class="feature-item reveal">
+        <div class="feature-icon">🗓</div>
+        <div class="feature-body">
+          <h3>Easy Reservations</h3>
+          <p>Book your table in seconds. Check real-time availability and receive instant email confirmation.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal" style="transition-delay:.1s;">
+        <div class="feature-icon">🍽</div>
+        <div class="feature-body">
+          <h3>Seasonal Cuisine</h3>
+          <p>Our menu evolves with the seasons, featuring the finest locally sourced and artisan ingredients.</p>
+        </div>
+      </div>
+      <div class="feature-item reveal" style="transition-delay:.2s;">
+        <div class="feature-icon">🥂</div>
+        <div class="feature-body">
+          <h3>Curated Wine List</h3>
+          <p>Over 200 labels from the world's most celebrated vineyards, guided by our sommelier.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-{% endblock content %}
+
+
+<!-- ═══════════════════════════════════════
+     ABOUT
+═══════════════════════════════════════ -->
+<section class="section about-section" id="about">
+  <div class="section-inner">
+    <div class="about-grid">
+
+      <div class="about-visual reveal">
+        <div class="about-img-frame">
+          🍴
+          <div style="position:absolute;bottom:32px;left:0;right:0;padding:0 24px;z-index:2;">
+            <div class="steam">
+              <div class="steam-line" style="height:28px;--d:2s;--del:0s;"></div>
+              <div class="steam-line" style="height:38px;--d:2.4s;--del:.3s;"></div>
+              <div class="steam-line" style="height:22px;--d:1.8s;--del:.6s;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="about-float-badge">
+          <div class="about-badge-icon">🏆</div>
+          <div>
+            <div class="about-badge-num">4×</div>
+            <div class="about-badge-label">Award Winner</div>
+          </div>
+        </div>
+        <div class="about-corner-badge">Chef's<br>Tasting<br>Menu</div>
+      </div>
+
+      <div class="about-text reveal" style="transition-delay:.15s;">
+        <div class="section-tag">Our Story</div>
+        <h2>Crafted With<br><em class="shimmer">Passion</em>, Served<br>With Pride</h2>
+        <p>Founded in 2018, Maison Rouge was born from a singular obsession — to create a dining experience that transcends the ordinary. Our head chef trained under three Michelin-starred masters across Paris, Tokyo, and New York.</p>
+        <p>Every detail, from the hand-folded napkins to the last drizzle of truffle oil, is an act of devotion to the craft of hospitality.</p>
+        <ul class="about-list">
+          <li>House-made pasta & breads baked fresh daily</li>
+          <li>70% of ingredients sourced within 150km</li>
+          <li>Private dining rooms for groups up to 20</li>
+          <li>Custom tasting menus with 48 hours notice</li>
+          <li>Award-winning wine cellar of 200+ labels</li>
+        </ul>
+        <div style="margin-top:32px;">
+          <a href="{% url 'reserve-table' %}" class="btn btn-gold">Reserve Your Experience →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════
+     MENU
+═══════════════════════════════════════ -->
+<section class="section menu-section" id="menu">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-tag">Culinary Selections</div>
+      <h2>Our <em class="gold-text">Featured</em> Menu</h2>
+      <p>Every dish tells a story — meticulously crafted with the finest seasonal ingredients and decades of expertise.</p>
+    </div>
+
+    <!-- Category filter -->
+    <div class="menu-filters reveal" style="transition-delay:.1s;">
+      <button class="filter-btn active" data-filter="all">All Dishes</button>
+      <button class="filter-btn" data-filter="starter">Starters</button>
+      <button class="filter-btn" data-filter="main">Mains</button>
+      <button class="filter-btn" data-filter="dessert">Desserts</button>
+      <button class="filter-btn" data-filter="drink">Drinks</button>
+    </div>
+
+    {% if menu_items %}
+      <div class="menu-grid">
+        {% for item in menu_items %}
+          <div class="menu-card" data-category="main">
+            <div class="menu-card-img">
+              {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy" />
+              {% else %}
+                <div class="menu-card-placeholder">🍽</div>
+              {% endif %}
+              <div class="menu-card-overlay"></div>
+              <span class="menu-card-tag">Chef's Pick</span>
+              <!-- Steam on hover -->
+              <div class="menu-card-steam">
+                <div class="sl" style="--d:2s;--del:0s;"></div>
+                <div class="sl" style="--d:2.5s;--del:.3s;"></div>
+                <div class="sl" style="--d:1.8s;--del:.6s;"></div>
+              </div>
+            </div>
+            <div class="menu-card-body">
+              <h3 class="menu-card-name">{{ item.name }}</h3>
+              <p class="menu-card-desc">{{ item.description }}</p>
+              <div class="menu-card-foot">
+                <div class="menu-price"><sup>Rs.</sup>{{ item.price }}</div>
+                {% if user.is_authenticated %}
+                  <a href="{% url 'reserve-table' %}" class="btn btn-outline-gold btn-sm">Book Table</a>
+                {% else %}
+                  <a href="{% url 'login' %}" class="btn btn-outline-gold btn-sm">Sign In</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🍽</div>
+        <h3>Menu Coming Soon</h3>
+        <p>Our culinary team is curating an exceptional seasonal selection. Check back shortly.</p>
+        {% if user.is_authenticated %}
+          <a href="{% url 'reserve-table' %}" class="btn btn-gold">Reserve Your Table</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════
+     STATS
+═══════════════════════════════════════ -->
+<div class="stats-section">
+  <div class="section-inner">
+    <div class="stats-grid">
+      <div class="stat-item reveal">
+        <span class="stat-num" data-count="12000" data-suffix="+">12k+</span>
+        <div class="stat-label">Guests Served</div>
+      </div>
+      <div class="stat-item reveal" style="transition-delay:.08s;">
+        <span class="stat-num" data-count="50" data-suffix="+">50+</span>
+        <div class="stat-label">Dishes on Menu</div>
+      </div>
+      <div class="stat-item reveal" style="transition-delay:.16s;">
+        <span class="stat-num" data-count="200" data-suffix="+">200+</span>
+        <div class="stat-label">Wine Labels</div>
+      </div>
+      <div class="stat-item reveal" style="transition-delay:.24s;">
+        <span class="stat-num" data-count="8" data-suffix=" yrs">8 yrs</span>
+        <div class="stat-label">Years of Excellence</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     TESTIMONIALS
+═══════════════════════════════════════ -->
+<section class="section testimonials-section">
+  <div class="section-inner">
+    <div class="section-header reveal">
+      <div class="section-tag">Guest Voices</div>
+      <h2>What Our Guests <em class="gold-text">Say</em></h2>
+      <p>Unforgettable moments shared by the people who matter most — our guests.</p>
+    </div>
+    <div class="testimonials-grid">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-quote">"</div>
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">The tasting menu was an absolute revelation. Each course felt like a carefully composed symphony — I've dined at Michelin-starred restaurants worldwide, and Maison Rouge holds its own beautifully.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">A</div>
+          <div>
+            <div class="testimonial-name">Aarav Sharma</div>
+            <div class="testimonial-role">Food Critic, Kathmandu Post</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal" style="transition-delay:.1s;">
+        <div class="testimonial-quote">"</div>
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">We celebrated our anniversary here and the team went above and beyond. The candlelit table, personalised menu card, and that truffle risotto — I still dream about it months later.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">P</div>
+          <div>
+            <div class="testimonial-name">Priya & Rohan</div>
+            <div class="testimonial-role">Regular Guests</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal" style="transition-delay:.2s;">
+        <div class="testimonial-quote">"</div>
+        <div class="stars">★★★★★</div>
+        <p class="testimonial-text">From the moment you step in, the service is impeccable. The sommelier's wine pairing recommendation transformed our dinner into something truly magical. Worth every rupee.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">S</div>
+          <div>
+            <div class="testimonial-name">Sunita Rai</div>
+            <div class="testimonial-role">Corporate Executive</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════
+     CTA BANNER
+═══════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="section-inner">
+    <h2 class="reveal">Ready for an<br><em class="shimmer">Unforgettable</em> Evening?</h2>
+    <p class="reveal" style="transition-delay:.08s;">Secure your table today — evenings at Maison Rouge fill quickly, especially on weekends.</p>
+    <div class="cta-actions reveal" style="transition-delay:.16s;">
+      {% if user.is_authenticated %}
+        <a href="{% url 'reserve-table' %}" class="btn btn-gold btn-lg">🗓 Reserve Now</a>
+        <a href="{% url 'my-reservations' %}" class="btn btn-ghost btn-lg">View My Bookings</a>
+      {% else %}
+        <a href="{% url 'signup' %}" class="btn btn-gold btn-lg">🗓 Create Account & Book</a>
+        <a href="{% url 'login' %}" class="btn btn-ghost btn-lg">Already a member? Sign In</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

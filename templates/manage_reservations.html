@@ -1,65 +1,134 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Reservations Dashboard — Maison Rouge{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Manage Reservations (Admin/Staff)</h2>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover table-bordered align-middle text-center">
-            <thead class="table-dark">
-                <tr>
-                    <th>User</th>
-                    <th>Guests</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                    <th>Table</th>
-                    <th>Actions</th>
-                </tr>
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-header-tag">⚙️ Staff Dashboard</div>
+    <h1>Reservations <em>Overview</em></h1>
+    <p>All bookings are confirmed automatically. This view is read-only.</p>
+  </div>
+</div>
+
+<section class="section" style="padding:48px 0 80px;">
+  <div class="section-inner">
+
+    <!-- Stats -->
+    <div class="admin-stats">
+      <div class="admin-stat reveal">
+        <div class="admin-stat-num" data-count="{{ total }}" data-suffix="">{{ total }}</div>
+        <div class="admin-stat-label">Total Bookings</div>
+      </div>
+      <div class="admin-stat reveal" style="transition-delay:.06s;">
+        <div class="admin-stat-num" style="color:#C99542;"
+             data-count="{{ today_count }}" data-suffix="">{{ today_count }}</div>
+        <div class="admin-stat-label">Today's Covers</div>
+      </div>
+      <div class="admin-stat reveal" style="transition-delay:.12s;">
+        <div class="admin-stat-num" style="color:#4ade80;"
+             data-count="{{ confirmed_count }}" data-suffix="">{{ confirmed_count }}</div>
+        <div class="admin-stat-label">Confirmed</div>
+      </div>
+      <div class="admin-stat reveal" style="transition-delay:.18s;">
+        <div class="admin-stat-num" style="color:#f87171;"
+             data-count="{{ cancelled_count }}" data-suffix="">{{ cancelled_count }}</div>
+        <div class="admin-stat-label">Cancelled</div>
+      </div>
+    </div>
+
+    {% if reservations %}
+      <div class="table-wrap reveal">
+        <div class="table-wrap-head">
+          <div>
+            <div class="table-title">All Reservations</div>
+            <p style="margin:4px 0 0;font-size:.78rem;color:var(--text-muted);">
+              Bookings are confirmed instantly at submission — no manual action required.
+            </p>
+          </div>
+          <span class="count-pill">{{ total }} total</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="dtable">
+            <thead>
+              <tr>
+                <th>Ref</th>
+                <th>Guest</th>
+                <th>Occasion</th>
+                <th>Table</th>
+                <th>Date</th>
+                <th>Slot</th>
+                <th>Guests</th>
+                <th>Special Requests</th>
+                <th>Status</th>
+              </tr>
             </thead>
             <tbody>
-                {% for res in reservations %}
+              {% for res in reservations %}
                 <tr>
-                    <td>{{ res.user.username }}</td>
-                    <td>{{ res.guests }}</td>
-                    <td>{{ res.reservation_date|date:"D, M d, Y" }}</td>
-                    <td>{{ res.reservation_time|time:"H:i" }}</td>
-                    <td>
-                        {% if res.status == "pending" %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                        {% elif res.status == "confirmed" %}
-                            <span class="badge bg-success">Confirmed</span>
-                        {% elif res.status == "cancelled" %}
-                            <span class="badge bg-danger">Cancelled</span>
+                  <td style="color:var(--gold);font-size:.78rem;font-weight:600;white-space:nowrap;">
+                    MR-{{ res.pk|stringformat:"05d" }}
+                  </td>
+                  <td>
+                    <div class="user-cell">
+                      <div class="u-avatar">{{ res.user.username|first|upper }}</div>
+                      <div>
+                        <div class="u-name">{{ res.user.username }}</div>
+                        {% if res.user.email %}
+                          <div style="font-size:.72rem;color:var(--text-muted);">{{ res.user.email }}</div>
                         {% endif %}
-                    </td>
-                    <td>
-                        {% if res.table %}
-                            Table {{ res.table.number }}
-                        {% else %}
-                            <span class="text-muted">Not Assigned</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if res.status == "pending" %}
-                            <a href="{% url 'confirm-reservation' res.id %}" class="btn btn-sm btn-success me-1">Confirm</a>
-                            <a href="{% url 'cancel-reservation' res.id %}" class="btn btn-sm btn-danger">Cancel</a>
-                        {% else %}
-                            <span class="text-muted">---</span>
-                        {% endif %}
-                    </td>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    {% if res.name %}
+                      <span style="font-size:.8rem;color:var(--text-soft);font-style:italic;">{{ res.name }}</span>
+                    {% else %}
+                      <span style="color:var(--text-faint);font-size:.78rem;">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="table-pill">🪑 #{{ res.table.number }}</span>
+                  </td>
+                  <td style="white-space:nowrap;font-size:.82rem;">
+                    {{ res.reservation_date|date:"M d, Y" }}
+                  </td>
+                  <td style="white-space:nowrap;">
+                    <span class="slot-pill">{{ res.get_slot_label }}</span>
+                  </td>
+                  <td style="font-size:.82rem;text-align:center;">{{ res.guests }}</td>
+                  <td style="max-width:180px;">
+                    {% if res.special_requests %}
+                      <span style="font-size:.76rem;color:var(--text-soft);">
+                        {{ res.special_requests|truncatechars:60 }}
+                      </span>
+                    {% else %}
+                      <span style="color:var(--text-faint);font-size:.76rem;">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge {% if res.status == 'confirmed' %}badge-confirmed{% else %}badge-cancelled{% endif %}">
+                      {% if res.status == 'confirmed' %}✓{% else %}✕{% endif %}
+                      {{ res.status|capfirst }}
+                    </span>
+                  </td>
                 </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7" class="text-muted">No reservations found.</td>
-                </tr>
-                {% endfor %}
+              {% endfor %}
             </tbody>
-        </table>
-    </div>
+          </table>
+        </div>
+      </div>
 
-    <div class="text-center mt-3">
-        <a href="{% url 'home' %}" class="btn btn-outline-primary btn-lg">Back to Home</a>
-    </div>
-</div>
-{% endblock content %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No Reservations Yet</h3>
+        <p>Bookings made by customers will appear here.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+{% endblock %}

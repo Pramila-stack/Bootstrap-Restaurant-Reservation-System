@@ -1,57 +1,66 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Sign In — Maison Rouge{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5 col-lg-4">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h3 class="card-title text-center mb-4">Login</h3>
+<div class="auth-page">
+  <div class="auth-particles" id="authParticles"></div>
+  <div class="auth-wrap">
+    <div class="auth-card">
 
-                    <!-- Display non-field errors -->
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger">
-                        {{ form.non_field_errors }}
-                    </div>
-                    {% endif %}
+      <div class="auth-card-head">
+        <div class="auth-emblem">🍷</div>
+        <h2>Welcome Back</h2>
+        <p>Sign in to manage your reservations</p>
+      </div>
 
-                    <form action="" method="POST" novalidate>
-                        {% csrf_token %}
+      <div class="auth-body">
 
-                        <!-- Username field -->
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" name="username" id="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" value="{{ form.username.value|default_if_none:'' }}">
-                            {% if form.username.errors %}
-                            <div class="invalid-feedback">
-                                {{ form.username.errors|striptags }}
-                            </div>
-                            {% endif %}
-                        </div>
+        {% if form.non_field_errors %}
+          <div class="alert alert-error" style="margin-bottom:20px;">
+            ❌ <span>{{ form.non_field_errors|join:", " }}</span>
+          </div>
+        {% endif %}
 
-                        <!-- Password field -->
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" name="password" id="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" value="{{ form.password.value|default_if_none:'' }}">
-                            {% if form.password.errors %}
-                            <div class="invalid-feedback">
-                                {{ form.password.errors|striptags }}
-                            </div>
-                            {% endif %}
-                        </div>
+        <form method="post" action="{% url 'login' %}">
+          {% csrf_token %}
 
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg">Login</button>
-                        </div>
-                    </form>
+          <div class="fgroup">
+            <label class="flabel" for="id_username">Username</label>
+            <input type="text" name="username" id="id_username" class="finput"
+                   placeholder="Your username"
+                   value="{{ form.username.value|default:'' }}"
+                   autocomplete="username" required />
+            {% if form.username.errors %}
+              <div class="ferror">❌ {{ form.username.errors|join:", " }}</div>
+            {% endif %}
+          </div>
 
-                    <p class="text-center mb-0">
-                        No account yet? 
-                        <a href="{% url 'signup' %}" class="btn btn-outline-primary btn-sm ms-2">Signup</a>
-                    </p>
-                </div>
-            </div>
-        </div>
+          <div class="fgroup">
+            <label class="flabel" for="id_password">Password</label>
+            <input type="password" name="password" id="id_password" class="finput"
+                   placeholder="Your password"
+                   autocomplete="current-password" required />
+          </div>
+
+          <input type="hidden" name="next" value="{{ next }}" />
+
+          <button type="submit" class="btn btn-gold" style="width:100%;justify-content:center;padding:15px;margin-top:8px;">
+            Sign In →
+          </button>
+        </form>
+
+        <div class="auth-divider"><span>New to Maison Rouge?</span></div>
+
+        <a href="{% url 'signup' %}" class="btn btn-ghost" style="width:100%;justify-content:center;padding:14px;color:var(--text-soft);">
+          Create an Account
+        </a>
+
+      </div>
     </div>
+
+    <p style="text-align:center;margin-top:20px;font-size:.78rem;color:var(--text-muted);">
+      By signing in you agree to our <a href="#" style="color:var(--gold);">Terms of Service</a>
+    </p>
+  </div>
 </div>
-{% endblock content %}
+{% endblock %}

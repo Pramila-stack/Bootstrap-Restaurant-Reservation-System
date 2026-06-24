@@ -1,54 +1,243 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Reserve a Table — Maison Rouge{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title text-center mb-4">Reserve a Table</h2>
 
-                    <!-- Check Availability Form -->
-                    <form method="get" class="mb-4">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="reservation_date" class="form-label">Date</label>
-                            <input type="date" class="form-control" id="reservation_date" name="reservation_date" value="{{ request.GET.reservation_date }}" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="reservation_time" class="form-label">Time</label>
-                            <input type="time" class="form-control" id="reservation_time" name="reservation_time" value="{{ request.GET.reservation_time }}" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="guests" class="form-label">Number of Guests</label>
-                            <input type="number" class="form-control" id="guests" name="guests" value="{{ request.GET.guests }}" min="1" required>
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">Check Availability</button>
-                        </div>
-                    </form>
-
-                    {% if form %}
-                    <hr>
-                    <!-- Reserve Table Form -->
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <div class="d-grid mt-3">
-                            <button type="submit" class="btn btn-success btn-lg">Reserve Table</button>
-                        </div>
-                    </form>
-                    {% endif %}
-
-                    <div class="text-center mt-4">
-                        <a href="{% url 'home' %}" class="btn btn-outline-danger">Go Back</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="page-header-tag">🗓 Reservations</div>
+    <h1>Reserve Your <em>Table</em></h1>
+    <p>Choose your date, dining slot, and party size — available tables appear instantly.</p>
+  </div>
 </div>
-{% endblock content %}
+
+<section class="section" style="padding:56px 0 80px;">
+  <div class="section-inner">
+    <div class="form-shell">
+
+      <!-- Step indicator -->
+      <div class="steps-bar" style="margin-bottom:32px;">
+        <div class="step-node {% if not form %}active{% else %}done{% endif %}">
+          <div class="step-circle">{% if form %}✓{% else %}1{% endif %}</div>
+          <span class="step-lbl">Pick Date &amp; Slot</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-node {% if form %}active{% endif %}">
+          <div class="step-circle">2</div>
+          <span class="step-lbl">Confirm Booking</span>
+        </div>
+      </div>
+
+      {% if not form %}
+      <!-- ══ STEP 1 — date + slot + guests ══ -->
+      <div class="form-card">
+        <div class="form-card-head">
+          <div class="form-card-head-icon">📅</div>
+          <div>
+            <h2>Check Availability</h2>
+            <p>Select a date and your preferred dining slot</p>
+          </div>
+        </div>
+        <div class="form-body">
+          <form method="get" action="{% url 'reserve-table' %}">
+
+            <div class="frow">
+              <div class="fgroup">
+                <label class="flabel" for="date">Date <span class="req">*</span></label>
+                <input type="date" name="date" id="date" class="finput"
+                       value="{{ request.GET.date }}" required
+                       min="{% now 'Y-m-d' %}" />
+              </div>
+              <div class="fgroup">
+                <label class="flabel" for="guests_check">Guests <span class="req">*</span></label>
+                <input type="number" name="guests" id="guests_check" class="finput"
+                       min="1" max="20" placeholder="How many guests?"
+                       value="{{ request.GET.guests }}" required />
+              </div>
+            </div>
+
+            <!-- Slot cards -->
+            <div class="fgroup">
+              <label class="flabel">Dining Slot <span class="req">*</span></label>
+              <div class="slot-grid">
+                {% with selected=request.GET.slot %}
+                  <label class="slot-card {% if selected == 'lunch' %}selected{% endif %}">
+                    <input type="radio" name="slot" value="lunch"
+                           {% if selected == 'lunch' %}checked{% endif %} required />
+                    <div class="slot-icon">☀️</div>
+                    <div class="slot-name">Lunch</div>
+                    <div class="slot-time">12:00 – 14:00</div>
+                  </label>
+                  <label class="slot-card {% if selected == 'afternoon' %}selected{% endif %}">
+                    <input type="radio" name="slot" value="afternoon"
+                           {% if selected == 'afternoon' %}checked{% endif %} />
+                    <div class="slot-icon">🫖</div>
+                    <div class="slot-name">Afternoon</div>
+                    <div class="slot-time">14:30 – 16:30</div>
+                  </label>
+                  <label class="slot-card {% if selected == 'early_dinner' %}selected{% endif %}">
+                    <input type="radio" name="slot" value="early_dinner"
+                           {% if selected == 'early_dinner' %}checked{% endif %} />
+                    <div class="slot-icon">🌅</div>
+                    <div class="slot-name">Early Dinner</div>
+                    <div class="slot-time">17:00 – 19:00</div>
+                  </label>
+                  <label class="slot-card {% if selected == 'dinner' %}selected{% endif %}">
+                    <input type="radio" name="slot" value="dinner"
+                           {% if selected == 'dinner' %}checked{% endif %} />
+                    <div class="slot-icon">🍷</div>
+                    <div class="slot-name">Dinner</div>
+                    <div class="slot-time">19:30 – 21:30</div>
+                  </label>
+                  <label class="slot-card {% if selected == 'late_night' %}selected{% endif %}">
+                    <input type="radio" name="slot" value="late_night"
+                           {% if selected == 'late_night' %}checked{% endif %} />
+                    <div class="slot-icon">🌙</div>
+                    <div class="slot-name">Late Night</div>
+                    <div class="slot-time">22:00 – 23:30</div>
+                  </label>
+                {% endwith %}
+              </div>
+              <p class="fhint">ℹ Each slot is a 2-hour dining window. The table is reserved for the full slot.</p>
+            </div>
+
+            <button type="submit" class="btn btn-gold"
+                    style="width:100%;justify-content:center;padding:15px;margin-top:4px;">
+              Check Available Tables →
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      {% else %}
+      <!-- ══ STEP 2 — complete booking ══ -->
+
+      <div class="avail-result">
+        <div class="avail-icon">✅</div>
+        <div class="avail-text">
+          <h4>Tables available for your selection</h4>
+          <div class="avail-pills">
+            <span class="avail-pill">📅 {{ request.GET.date }}</span>
+            <span class="avail-pill">🕐
+              {% with s=request.GET.slot %}
+                {% if s == 'lunch' %}Lunch · 12:00–14:00
+                {% elif s == 'afternoon' %}Afternoon · 14:30–16:30
+                {% elif s == 'early_dinner' %}Early Dinner · 17:00–19:00
+                {% elif s == 'dinner' %}Dinner · 19:30–21:30
+                {% elif s == 'late_night' %}Late Night · 22:00–23:30
+                {% else %}{{ s }}
+                {% endif %}
+              {% endwith %}
+            </span>
+            <span class="avail-pill">👥 {{ request.GET.guests }} guest{{ request.GET.guests|pluralize }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-card-head">
+          <div class="form-card-head-icon">🍽</div>
+          <div>
+            <h2>Complete Your Booking</h2>
+            <p>Select a table and personalise your reservation</p>
+          </div>
+        </div>
+        <div class="form-body">
+
+          {% if form.errors %}
+            <div class="alert alert-error" style="margin-bottom:24px;">
+              ❌
+              <div>
+                {% for field in form %}
+                  {% for e in field.errors %}<div>{{ e }}</div>{% endfor %}
+                {% endfor %}
+                {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <form method="post"
+                action="{% url 'reserve-table' %}?date={{ request.GET.date }}&slot={{ request.GET.slot }}&guests={{ request.GET.guests }}">
+            {% csrf_token %}
+
+            <!-- Hidden fields carry step-1 data into POST -->
+            <input type="hidden" name="reservation_date" value="{{ request.GET.date }}" />
+            <input type="hidden" name="slot"             value="{{ request.GET.slot }}" />
+
+            <!-- Occasion -->
+            <div class="fgroup">
+              <label class="flabel" for="id_name">Occasion / Booking Name</label>
+              <input type="text" name="name" id="id_name" class="finput"
+                     placeholder="e.g. Anniversary dinner, Birthday celebration…"
+                     value="{{ form.name.value|default:'' }}" />
+              <p class="fhint">✦ Optional — helps our team personalise your experience</p>
+            </div>
+
+            <div class="frow">
+              <!-- Table selector -->
+              <div class="fgroup">
+                <label class="flabel" for="id_table">Select Table <span class="req">*</span></label>
+                <div class="select-wrap">
+                  <select name="table" id="id_table" class="finput" required>
+                    <option value="">— Choose a table —</option>
+                    {% for t in form.table.field.queryset %}
+                      <option value="{{ t.pk }}"
+                        {% if form.table.value == t.pk|stringformat:"s" %}selected{% endif %}>
+                        Table #{{ t.number }} · {{ t.seats }} seats
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+                {% if form.table.errors %}
+                  <div class="ferror">❌ {{ form.table.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+
+              <!-- Guests -->
+              <div class="fgroup">
+                <label class="flabel" for="id_guests">Guests <span class="req">*</span></label>
+                <input type="number" name="guests" id="id_guests" class="finput"
+                       min="1" max="20" value="{{ request.GET.guests }}" required />
+                {% if form.guests.errors %}
+                  <div class="ferror">❌ {{ form.guests.errors|join:", " }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Special requests -->
+            <div class="fgroup">
+              <label class="flabel" for="id_special_requests">Special Requests</label>
+              <textarea name="special_requests" id="id_special_requests"
+                        class="finput" rows="3"
+                        placeholder="Dietary requirements, seating preferences, allergies, celebrations…">{{ form.special_requests.value|default:'' }}</textarea>
+              <p class="fhint">We'll do our best to accommodate all requests</p>
+            </div>
+
+            <!-- Instant confirm notice -->
+            <div class="info-notice">
+              <span class="info-notice-icon">⚡</span>
+              <span>Your table will be <strong>instantly confirmed</strong> — no waiting. A confirmation email will be sent immediately.</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div style="display:flex;gap:12px;">
+              <a href="{% url 'reserve-table' %}" class="btn btn-ghost"
+                 style="flex:1;justify-content:center;">← Back</a>
+              <button type="submit" class="btn btn-gold"
+                      style="flex:2;justify-content:center;padding:15px;">
+                🗓 Confirm Reservation
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

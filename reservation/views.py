@@ -1,141 +1,142 @@
-from django.conf import settings
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
-from django.views.generic import CreateView,ListView,View
-from django.contrib.auth.mixins import LoginRequiredMixin
+import datetime
 
-import reservation
-from reservation.forms import ReservationForm, SignupForm
-from reservation.models import MenuItem, Profile, Reservation, Table
-from django.core.mail import send_mail
+from django.contrib import messages
+from django.db import IntegrityError
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView, View
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 
-# Create your views here.
+from reservation.emails import (
+    send_booking_confirmed_guest,
+    send_booking_cancelled_by_guest_guest,
+)
+from reservation.forms import ReservationForm, SignupForm
+from reservation.models import MenuItem, Profile, Reservation, Table
+
+
 class SignupView(CreateView):
     template_name = "registration/signup.html"
-    form_class = SignupForm
-    success_url = reverse_lazy("home")
+    form_class    = SignupForm
+    success_url   = reverse_lazy("home")
 
     def form_valid(self, form):
-        # Save the user first
         response = super().form_valid(form)
-        # Save the email to the user
         self.object.email = form.cleaned_data['email']
         self.object.save()
-        # Create customer profile
         Profile.objects.create(user=self.object, role="customer")
         login(self.request, self.object)
+        messages.success(self.request, f"Welcome to Maison Rouge, {self.object.username}!")
         return response
 
+
 class HomeView(ListView):
-    model = MenuItem
-    template_name = "home.html"
-    context_object_name = "menu_items"
+    model                = MenuItem
+    template_name        = "home.html"
+    context_object_name  = "menu_items"
 
     def get_queryset(self):
         return MenuItem.objects.filter(available=True).order_by("-id")
-    
+
 
 class ReserveTableView(LoginRequiredMixin, CreateView):
-    model = Reservation
-    form_class = ReservationForm
+    model         = Reservation
+    form_class    = ReservationForm
     template_name = "reserve_table.html"
-    success_url = reverse_lazy("my-reservations")
+    success_url   = reverse_lazy("my-reservations")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        date = self.request.GET.get('reservation_date')
-        time = self.request.GET.get('reservation_time')
-        if date and time:
+        date = self.request.GET.get('date')
+        slot = self.request.GET.get('slot')
+        if date and slot:
             kwargs['date'] = date
-            kwargs['time'] = time
+            kwargs['slot'] = slot
         return kwargs
 
+    def get_context_data(self, **kwargs):
+        ctx  = super().get_context_data(**kwargs)
+        date = self.request.GET.get('date')
+        slot = self.request.GET.get('slot')
+        # Only show step-2 form when both params are present
+        if not (date and slot):
+            ctx['form'] = None
+        return ctx
+
     def form_valid(self, form):
-        form.instance.user = self.request.user
-        form.instance.status = "pending"
-        response = super().form_valid(form)
-
-        if form.instance.user.email:
-            send_mail(
-                subject="Reservation request received",
-                message=f"Hi {form.instance.user.username}, your reservation for {form.instance.guests} guests on {form.instance.reservation_date} at {form.instance.reservation_time} is pending confirmation.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[form.instance.user.email]
+        form.instance.user   = self.request.user
+        form.instance.status = 'confirmed'           # auto-confirm immediately
+        try:
+            response = super().form_valid(form)
+        except IntegrityError:
+            form.add_error(
+                None,
+                "This table slot was just taken by another guest. "
+                "Please go back and choose a different table or time slot."
             )
+            return self.form_invalid(form)
 
-            send_mail(
-                subject="New Reservation Received",
-                message=f"New Reservation by {form.instance.user.username} for {form.instance.guests} guests on {form.instance.reservation_date} at {form.instance.reservation_time}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=["pramilatmg.np@gmail.com"]
-            )
+        send_booking_confirmed_guest(form.instance)
 
-        
+        messages.success(
+            self.request,
+            "Your table is confirmed! A confirmation email has been sent to you."
+        )
         return response
-    
-    
-class MyReservationView(LoginRequiredMixin,ListView):
-    model = Reservation
-    template_name = "my_reservations.html"
+
+
+class MyReservationView(LoginRequiredMixin, ListView):
+    model               = Reservation
+    template_name       = "my_reservations.html"
     context_object_name = "reservations"
 
     def get_queryset(self):
         return Reservation.objects.filter(user=self.request.user).order_by("-reservation_date")
-        
-    
-    
-# Admin/staff sees all reservations
-@method_decorator(staff_member_required, name='dispatch')
-class ManageReservationsView(ListView):
-    model = Reservation
-    template_name = 'manage_reservations.html'
-    context_object_name = 'reservations'
-    # ordering = ['-reservation_date','reservation_time']
-    ordering = ['-id']
 
-# Admin confirms reservation
-@method_decorator(staff_member_required,name="dispatch")
-class ConfirmReservationView(View):
-    def get(self,request,pk,*args,**kwargs):
-        res = get_object_or_404(Reservation,pk=self.kwargs['pk'])
 
-        already_booked = Reservation.objects.filter(
-            table = res.table,
-            reservation_date = res.reservation_date,
-            reservation_time = res.reservation_time,
-            status = 'confirmed'
-        ).exists()
+class CustomerCancelReservationView(LoginRequiredMixin, View):
+    """Allow a guest to cancel their own confirmed upcoming reservation."""
 
-        if already_booked:
-            return redirect('manage-reservations')
-        res.status = 'confirmed'
-        res.save()
-#sends confirmation email.
-        send_mail(
-            subject='Your reservation is Confirmed',
-            message=f"Hi{res.user.username},Your reservation for {res.guests} guest at {res.reservation_date} on {res.reservation_time} is confirmed.Table: {res.table.number}.",
-            from_email= settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[res.user.email]
-        )
-        return redirect("manage-reservations")
+    def post(self, request, pk, *args, **kwargs):
+        res = get_object_or_404(Reservation, pk=pk, user=request.user)
 
-# Admin cancels reservation
-@method_decorator(staff_member_required,name="dispatch")
-class CancelReservationView(View):
-    def get(self,request,pk,*args,**kwargs):
-        res = get_object_or_404(Reservation,pk=pk)
+        if res.status != 'confirmed':
+            messages.error(request, "Only confirmed reservations can be cancelled.")
+            return redirect('my-reservations')
+
+        if res.reservation_date < datetime.date.today():
+            messages.error(request, "Past reservations cannot be cancelled.")
+            return redirect('my-reservations')
+
         res.status = 'cancelled'
         res.save()
+        send_booking_cancelled_by_guest_guest(res)
+        messages.success(request, "Your reservation has been cancelled. A confirmation email has been sent.")
+        return redirect('my-reservations')
 
-        #send cancellation email.
-        send_mail(
-            subject='Your reservation is cancelled',
-            message=f"Hi {res.user.username },Your reservation for {res.guests} guests at {res.reservation_date} on {res.reservation_time} has been cancelled.",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[res.user.email],
-        )
-        return redirect('manage-reservations')
-    
+
+# ── Staff read-only dashboard ──────────────────────────────────────────────
+
+@method_decorator(staff_member_required, name='dispatch')
+class ManageReservationsView(ListView):
+    model               = Reservation
+    template_name       = 'manage_reservations.html'
+    context_object_name = 'reservations'
+
+    def get_queryset(self):
+        return Reservation.objects.select_related('user', 'table').order_by('-reservation_date', 'slot')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        qs  = Reservation.objects.all()
+        today = datetime.date.today()
+        ctx['total']           = qs.count()
+        ctx['confirmed_count'] = qs.filter(status='confirmed').count()
+        ctx['cancelled_count'] = qs.filter(status='cancelled').count()
+        ctx['today_count']     = qs.filter(
+            reservation_date=today, status='confirmed'
+        ).count()
+        return ctx
