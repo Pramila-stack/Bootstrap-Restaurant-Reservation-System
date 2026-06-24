@@ -33,12 +33,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary_storage',
-    'cloudinary',
     'reservation',
 ]
 
 # ── Middleware ─────────────────────────────────────────────────────────────
+# WhiteNoise must sit directly after SecurityMiddleware
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -71,6 +70,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'RESTAURANT.wsgi.application'
 
 # ── Database ───────────────────────────────────────────────────────────────
+# Render sets DATABASE_URL automatically for linked PostgreSQL.
+# Falls back to local SQLite when DATABASE_URL is absent.
 
 DATABASES = {
     'default': dj_database_url.config(
@@ -96,30 +97,26 @@ TIME_ZONE     = 'UTC'
 USE_I18N      = True
 USE_TZ        = True
 
-# ── Static files (WhiteNoise) ──────────────────────────────────────────────
+# ── Static files ───────────────────────────────────────────────────────────
 
 STATIC_URL       = '/static/'
 STATIC_ROOT      = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
+# WhiteNoise: compress + fingerprint static files for long-term caching
 STORAGES = {
     'default': {
-        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
     },
     'staticfiles': {
         'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
     },
 }
 
-# ── Media files (Cloudinary) ───────────────────────────────────────────────
+# ── Media files ────────────────────────────────────────────────────────────
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', ''),
-    'API_KEY':    os.environ.get('CLOUDINARY_API_KEY', ''),
-    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
-}
-
-MEDIA_URL = '/media/'
+MEDIA_URL  = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Auth redirects ─────────────────────────────────────────────────────────
 

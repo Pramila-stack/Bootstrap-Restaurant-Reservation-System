@@ -14,8 +14,6 @@ dj-database-url==3.1.2
 
 # Images, media
 Pillow==12.1.1
-cloudinary==1.44.2
-django-cloudinary-storage==0.3.0
 
 # HTTP & requests
 requests==2.32.5
